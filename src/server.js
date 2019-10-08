@@ -13,4 +13,4 @@ const db = knex({
 
 app.set('db', db);
 
-app.listen(port, () => console.log(`Server running at https://localhost:${PORT}`));
+app.listen(port, () => console.log(`Server running at https://localhost:${port}`));

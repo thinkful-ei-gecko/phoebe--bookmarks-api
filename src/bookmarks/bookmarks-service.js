@@ -17,7 +17,7 @@ const BookmarksService = {
       .into('bookmarks')
       .returning('*')
       .then(rows => {
-        return rows[0]
+        return rows[0];
       });
   },
 }
