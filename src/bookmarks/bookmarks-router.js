@@ -82,7 +82,7 @@ bookmarksRouter
       })
       .catch(next);
   })
-  .get((req, res, next) => {
+  .get((req, res) => {
     res.json(serializeBookmark(res.bookmark));
   })
   .delete((req, res, next) => {

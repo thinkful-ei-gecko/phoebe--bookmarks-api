@@ -2,7 +2,7 @@ const { expect } = require("chai");
 const knex = require("knex");
 const app = require("../src/app");
 
-const makeBoomarksArray = require("./bookmarks.fixtures");
+const makeBookmarksArray = require("./bookmarks.fixtures");
 
 describe("Bookmarks endpoints", () => {
 	let db;
@@ -31,7 +31,7 @@ describe("Bookmarks endpoints", () => {
 		});
 
 		context("Given there are bookmarks in the table", () => {
-			const testBookmarks = makeBoomarksArray();
+			const testBookmarks = makeBookmarksArray();
 
 			beforeEach("insert bookmarks", () => {
 				return db
@@ -127,7 +127,7 @@ describe("Bookmarks endpoints", () => {
 
     context('Given articles', () => {
 
-      const testBookmarks = makeBoomarksArray();
+      const testBookmarks = makeBookmarksArray();
       beforeEach("insert bookmarks", () => {
         return db
           .into("bookmarks")
