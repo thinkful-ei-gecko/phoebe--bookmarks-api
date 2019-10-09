@@ -70,6 +70,20 @@ describe("Bookmarks endpoints", () => {
   });
   
   describe('POST /bookmarks', () => {
+    it('returns an error message if the wrong type is inputted', () => {
+      const newBookmark = {
+        title: 25,
+        url: 'https://glossier.com',
+        description: 'cool girl makeup',
+        rating: 5
+      }
+
+      return supertest(app)
+        .post('/bookmarks')
+        .send(newBookmark)
+        .expect(400, { error: { message: `Title, url, and description must be strings`}})
+    })
+    
     it('POST /bookmarks creates and returns a bookmark and a 201 status', () => {
       const newBookmark = {
         title: 'Glossier',
@@ -137,4 +151,84 @@ describe("Bookmarks endpoints", () => {
       });
     });
   });
+
+  describe('DELETE /bookmarks/:bookmark_id', () => {
+    const bookmark_id = 2;
+    const testBookmarksWithoutDeleted = testBookmarks.filter(bookmark => bookmark.id !== bookmark_id)
+    
+    context('Given no bookmarks', () => {
+      it('returns a 404', () => {
+        return supertest(app)
+          .delete(`/bookmarks/${bookmark_id}`)
+          .expect(404, { error: { message: 'Bookmark does not exist' }})
+      })
+    })
+
+    context('Given bookmarks', () => {
+      beforeEach('insert articles', () => {
+        return db
+          .into('bookmarks')
+          .insert(testBookmarks)
+      })
+      
+      it('deletes the bookmark and returns a 204 status', () => {
+        return supertest(app)
+          .delete(`/bookmarks/${bookmark_id}`)
+          .expect(204)
+          .then(res => {
+            return supertest(app)
+              .get(`/bookmarks`)
+              .expect(testBookmarksWithoutDeleted)
+          })
+      })
+    })
+  });
+
+  describe('PATCH /bookmarks/:bookmark_id', () => {
+    const idToUpdate = 2;
+    const fieldsToUpdate = {
+      title: "Githubby", 
+      description: "Coding goals"
+    }
+    const expectedBookmark = {
+      ...testBookmarks[idToUpdate],
+      ...fieldsToUpdate
+    }
+    
+    context('Given no bookmarks in the array', () => {
+      it('returns a 404 and an error message', () => {
+        return supertest(app)
+          .patch(`/bookmarks/${idToUpdate}`)
+          .send(fieldsToUpdate)
+          .expect(404, { error: { message: 'Bookmark does not exist'}})
+      })
+    })
+
+    context('Given bookmarks are in the array', () => {
+      beforeEach('insert articles', () => {
+        return db
+          .into('bookmarks')
+          .insert(testBookmarks)
+      })
+
+      it('responds with a 204 and updates the article', () => {
+        return supertest(app)
+          .patch(`/bookmarks/${idToUpdate}`)
+          .send(fieldsToUpdate)
+          .expect(204)
+          .then(res => {
+            return supertest(app)
+              .get(`/bookmarks/${idToUpdate}`)
+              .expect(expectedBookmark)
+          })
+      })
+
+      it('responds with 400 when no required fields are provided', () => {
+        return supertest(app)
+          .patch(`/bookmarks/${idToUpdate}`)
+          .send({sup: 'foo'})
+          .expect(400, { error: { message: `Request body must either contain title, url, rating, or description`}})
+      })
+    })
+  })
 })

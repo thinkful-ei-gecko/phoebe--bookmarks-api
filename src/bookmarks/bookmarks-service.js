@@ -20,6 +20,16 @@ const BookmarksService = {
         return rows[0];
       });
   },
+  deleteBookmark(knex, id) {
+    return knex('bookmarks')
+      .where({ id })
+      .delete()
+  },
+  updateBookmark(knex, id, fieldsToUpdate) {
+    return knex('bookmarks')
+      .where({ id })
+      .update(fieldsToUpdate)
+  }, 
 }
 
 module.exports = BookmarksService;

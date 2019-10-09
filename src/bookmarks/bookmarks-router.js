@@ -5,7 +5,7 @@ const xss = require('xss');
 const BookmarksService =  require('./bookmarks-service')
 
 const bookmarksRouter = express.Router();
-const responseJson = express.json();
+const jsonParser = express.json();
   
 
 //Weird structure here is per it being one line (despite the object taking up multiple lines)
@@ -24,9 +24,10 @@ bookmarksRouter
       })
       .catch(next);
   })
-  .post(responseJson, (req, res, next) => {
+  .post(jsonParser, (req, res, next) => {
     const { title, url, description, rating, id } = req.body;
     const newBookmark = { title, url, rating };
+    const ratingNum = parseInt(rating)
 
     for (const [key, value] of Object.entries(newBookmark)) {
       if (value == null) {
@@ -34,6 +35,17 @@ bookmarksRouter
           error: { message: `Missing ${key} in request body`}
         })
       }
+    }
+
+    if (typeof(title) !== 'string' || typeof(url) !== 'string' || typeof(description) !== 'string') {
+      return res.status(400).json({
+        error: { message: `Title, url, and description must be strings`}
+      })
+    }
+    if (ratingNum > 5 || ratingNum < 1) {
+      return res.status(400).json({
+        error: { message: `Rating must be an integer between 1 and 5`}
+      })
     }
 
     newBookmark.description = description;
@@ -72,6 +84,40 @@ bookmarksRouter
   })
   .get((req, res, next) => {
     res.json(serializeBookmark(res.bookmark));
+  })
+  .delete((req, res, next) => {
+    BookmarksService.deleteBookmark(
+      req.app.get('db'),
+      req.params.bookmark_id
+    )
+      .then(() => {
+        res.status(204).end()
+      })
+      .catch(next);
+  })
+  .patch(jsonParser, (req, res, next) => {
+    const { title, url, rating, description } = req.body;
+    const fieldsToUpdate = { title, url, rating, description }
+
+    const numOfValues = Object.values(fieldsToUpdate).filter(Boolean).length;
+    if (numOfValues === 0) {
+      return res
+        .status(400)
+        .json({
+          error: {
+            message: `Request body must either contain title, url, rating, or description`
+          }
+        })
+    }
+    
+    BookmarksService.updateBookmark(
+      req.app.get('db'), 
+      req.params.bookmark_id,
+      fieldsToUpdate
+    )
+      .then(() => {
+        res.status(204).end()
+      })
   })
 
 
